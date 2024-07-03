@@ -19,7 +19,7 @@ const ProfilePage = () => {
     const [phone, setphone] = useState('')
     const [address, setAddress] = useState('')
     const [avatar, setAvatar] = useState('')
-    const [password, setPassword] = useState('')
+    // const [password, setPassword] = useState('')
     // const [loading, setLoading] = useState(false)
     const mutation = useMutationHook(
         (data) => {
@@ -37,7 +37,7 @@ const ProfilePage = () => {
         setphone(user?.phone)
         setAddress(user?.address)
         setAvatar(user?.avatar)
-        setPassword('')
+        // setPassword('')
     },[user])
 
     useEffect(() => {
@@ -86,9 +86,9 @@ const ProfilePage = () => {
         setAvatar(file.url || file.preview);
     }
     
-    const handleOnChangePassword = (value) => {
-        setPassword(value)
-    }
+    // const handleOnChangePassword = (value) => {
+    //     setPassword(value)
+    // }
 
     const handleUpdateProfile = () => {
         mutation.mutate({
@@ -98,7 +98,7 @@ const ProfilePage = () => {
             phone,
             address,
             avatar,
-            password,
+            // password,
             access_token: user?.access_token,
         })
     }
@@ -155,14 +155,14 @@ const ProfilePage = () => {
                     style={{ background: 'rgb(255, 66, 7)', color: 'rgb(255, 255, 255)', border: 'none', fontWeight: '500', height: '30px', width: '100px', margin: '26px 0 10px'}} 
                     textButton="Cập nhật" />
                 </WrapperInput>
-                <WrapperInput>
+                {/* <WrapperInput>
                     <WrapperLable htmlFor='password'>Password</WrapperLable>
                     <InputFormComponent id="password" style={{width: '300px'}} value={password} onChange={handleOnChangePassword} />
                     <ButtonComponent 
                     onClick={handleUpdateProfile} 
                     style={{ background: 'rgb(255, 66, 7)', color: 'rgb(255, 255, 255)', border: 'none', fontWeight: '500', height: '30px', width: '100px', margin: '26px 0 10px'}} 
                     textButton="Cập nhật" />
-                </WrapperInput>
+                </WrapperInput> */}
 
             </WrapperContentProfile>
       
