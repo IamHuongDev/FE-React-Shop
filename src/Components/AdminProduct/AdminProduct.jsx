@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { WrapperHeader, WrapperUploadFile } from './StyleAdminProduct'
 import { Button, Form, Input, Modal, Upload } from 'antd'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import TableComponent from '../TableComponent/TableComponent'
 import InputComponent from '../InputComponent/InputComponent'
 import { getBase64 } from '../../utils'
 import * as ProductService from '../../Service/ProductService'
 import { useMutationHook } from '../../Hooks/useMutationHook'
 import * as message from '../../Components/MessageComponent/MessgeComponent'
+import { useQuery } from '@tanstack/react-query'
 
 const AdminProduct = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,11 +23,8 @@ const AdminProduct = () => {
     rating: ''
   })
 
+  const [form] = Form.useForm();
 
-  // const mutation = useMutationHook(
-  //   data => ProductService.createProduct(data)
-  // )
-  
   const mutation = useMutationHook(
     data => {
       const {
@@ -53,27 +51,68 @@ const AdminProduct = () => {
     }
   )
 
+  const getAllProducts = async () => {
+    const res = await ProductService.getAllProduct();
+    return res;
+  }
+
  const {data, isLoading, isSuccess, isError} = mutation
+
+ const renderAction = () => {
+  return (
+    <div>
+    <DeleteOutlined style={{fontSize: '30px', color: 'red', cursor: 'pointer'}}/>
+    <EditOutlined style={{fontSize: '30px', color: 'orange', cursor: 'pointer', marginLeft: '20px'}}/>
+  </div>
+  )
+ }
+
+ const {isLoading: isLoadingProduct, data: product } = useQuery({
+  queryKey: ['product'],
+  queryFn: getAllProducts,
+  retry: 3,
+  retryDelay: 1000,
+  });
+
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      
+    },
+    {
+      title: "Price",
+      dataIndex: "price",
+    },
+    {
+      title: "Rating",
+      dataIndex: "rating",
+    },
+    {
+      title: "CountInStock",
+      dataIndex: "countInStock",
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+    },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: renderAction
+
+    },
+  ];
+  const dataTable = product?.data?.length && product?.data?.map((item) => { return { ...item, key: item._id } });
+
 
  useEffect(() => {
    if (isSuccess && data?.status === 'OK') {
      message.success('Thêm sản phẩm thành công')
-     setIsModalOpen(false)
-     setStateProduct({
-       name: '',
-       type: '',
-       image: '',
-       price: '',
-       description: '',
-       countInStock: '',
-       discount: '',
-       rating: ''
-     })
-   } else {
-     message.error('Thêm sản phẩm thất bại')
-
-   }
- },[isSuccess, isError])
+     handleCancel();
+     form.resetFields();
+   } 
+ },[isSuccess])
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -86,6 +125,17 @@ const AdminProduct = () => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
+    setStateProduct({
+      name: '',
+      type: '',
+      image: '',
+      price: '',
+      description: '',
+      countInStock: '',
+      discount: '',
+      rating: ''
+    });
+    form.resetFields();
   };
 
   const onFinish = () => {
@@ -112,25 +162,23 @@ const AdminProduct = () => {
         <Button style={{ height: '150px', width: '150px', borderRadius: '6px', borderStyle: 'dashed' }} onClick={showModal}><PlusOutlined style={{ fontSize: '40px' }} /></Button>
       </div>
       <div>
-        <TableComponent />
+        <TableComponent columns={columns} isLoading={isLoadingProduct} data={dataTable}/>
       </div>
-      <Modal title="Thêm mới sản phẩm" open={isModalOpen} onCancel={handleCancel} okText="">
+      <Modal title="Thêm mới sản phẩm" open={isModalOpen} onCancel={handleCancel} footer={null}>
         <Form
           name="basic"
           labelCol={{
-            span: 8,
+            span: 6,
           }}
           wrapperCol={{
-            span: 16,
+            span: 18,
           }}
           style={{
             maxWidth: 600,
           }}
-          initialValues={{
-            remember: true,
-          }}
           onFinish={onFinish}
           autoComplete="off"
+          form={form}
         >
           <Form.Item
             label="Name"
@@ -262,8 +310,8 @@ const AdminProduct = () => {
           </Form.Item>
           <Form.Item
             wrapperCol={{
-              offset: 8,
-              span: 16,
+              offset: 11,
+              span: 13,
             }}
           >
             <Button onClick={handleSubmit} type="primary" htmlType="submit">
