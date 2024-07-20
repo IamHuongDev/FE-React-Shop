@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { WrapperHeader, WrapperUploadFile } from './StyleAdminProduct'
-import { Button, Form, Input, Modal, Upload } from 'antd'
-import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { Button, Form, Input, Modal, Upload, Space } from 'antd'
+import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
 import TableComponent from '../TableComponent/TableComponent'
 import InputComponent from '../InputComponent/InputComponent'
 import { getBase64 } from '../../utils'
@@ -19,6 +19,9 @@ const AdminProduct = () => {
   const [rowSelected, setRowSelected] = useState('');
   const [isModalOpenDelete, setIsModalOpenDelete] = useState(false);
   const user = useSelector((state) => state?.user)
+
+  const searchInput = useRef(null);
+
   const [stateProduct, setStateProduct] = useState({
     name: '',
     type: '',
@@ -167,27 +170,175 @@ const AdminProduct = () => {
 
   const {isLoading: isLoadingProduct, data: product } = queryProduct
 
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+   
+  };
+  const handleReset = (clearFilters) => {
+    clearFilters();
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <InputComponent
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: 'block',
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? '#1677ff' : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+  });
+
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
-      
+      // sorter: (a, b) => a?.name.localeCompare(b?.name), //c1
+      sorter: (a, b) => a?.name.length - b?.name.length, //c2
+      ...getColumnSearchProps('name'),
+
     },
     {
       title: "Price",
       dataIndex: "price",
+      sorter: (a, b) => a?.price - b?.price,
+      filters: [
+        {
+          text: '> 50',
+          value: '>',
+        },
+        {
+          text: '= 50',
+          value: '=',
+        },
+        {
+          text: '< 50',
+          value: '<',
+        },
+      ],
+      onFilter: (value, record) => {
+        if (value === '>') {
+          return record.price > 50;
+        } else if (value === '=') {
+          return record.price === 50;
+        } else if (value === '<') {
+          return record.price < 50;
+        }
+      }
     },
     {
       title: "Rating",
       dataIndex: "rating",
+      sorter: (a, b) => a?.rating - b?.rating,
+      filters: [
+        {
+          text: '5 sao',
+          value: '5',
+        },
+        {
+          text: '4 sao',
+          value: '4',
+        },
+        {
+          text: '3 sao',
+          value: '3',
+        },
+        {
+          text: '2 sao',
+          value: '2',
+        },
+        {
+          text: '1 sao',
+          value: '1',
+        },
+        {
+          text: '0 sao',
+          value: '0',
+        },
+      ],
+      onFilter: (value, record) => {
+        if (value === '5') {
+          return record.rating = 5;
+        } else if (value === '4') {
+          return record.rating >= 4 && record.rating < 5;
+        } else if (value === '3') {
+          return record.rating >= 3 && record.rating < 4;
+        } else if (value === '2') {
+          return record.rating >= 2 && record.rating < 3;
+        } else if (value === '1') {
+          return record.rating >= 1 && record.rating < 2;
+        } else if (value === '0') {
+          return record.rating >= 0 && record.rating < 1;
+        }
+      }
+        
     },
     {
       title: "CountInStock",
       dataIndex: "countInStock",
+      sorter: (a, b) => a?.countInStock - b?.countInStock,
     },
     {
       title: "Type",
       dataIndex: "type",
+      sorter: (a, b) => a?.type.localeCompare(b?.type), 
     },
     {
       title: "Action",
